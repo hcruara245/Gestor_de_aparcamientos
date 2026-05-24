@@ -133,7 +133,7 @@ INSERT INTO Servicios_Disponibles (nombre_servicio, precio) VALUES
 ('Cambio de Aceite', 21.04);
 
 -- Insertar Proveedores reales con teléfono incluido
-INSERT INTO Proveedores (nombre, direccion, telephone, tiempo_entrega_dias) VALUES
+INSERT INTO Proveedores (nombre, direccion, telefono, tiempo_entrega_dias) VALUES
 ('Lubricantes Calatayud', 'Polígono Industrial Las Estaciones, Cl 4', '976112233', 2),
 ('Suministros Limpieza Panteras', 'Av. de la Almunia 45', '976445566', 3);
 
