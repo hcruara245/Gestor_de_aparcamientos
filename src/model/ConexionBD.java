@@ -21,23 +21,27 @@ public class ConexionBD {
      * Método para obtener la conexión activa a la base de datos.
      * @return Connection objeto de conexión listo para usar.
      */
+    /**
+     * Método para obtener la conexión activa a la base de datos.
+     * Si la conexión se cerró, abre una nueva de forma automática.
+     */
     public static Connection getConexion() {
-        if (conexion == null) {
-            try {
-                // Cargamos el driver de MySQL (asegúrate de tener el JAR en tu carpeta /libs)
+        try {
+            // Si la conexión es nula O un método la cerró previamente, abrimos una nueva
+            if (conexion == null || conexion.isClosed()) {
+                // Cargamos el driver de MySQL
                 Class.forName("com.mysql.cj.jdbc.Driver");
 
-                // Establecemos la conexión
+                // Establecemos la conexión remota
                 conexion = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("Conexión con 'parking_db' establecida correctamente.");
-
-            } catch (ClassNotFoundException e) {
-                System.err.println("Error: No se encontró el Driver de MySQL en las librerías.");
-                e.printStackTrace();
-            } catch (SQLException e) {
-                System.err.println("Error de SQL al intentar conectar con la base de datos.");
-                e.printStackTrace();
+                System.out.println("Conexión con 'parking_db' establecida (o restaurada) correctamente.");
             }
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error: No se encontró el Driver de MySQL en las librerías.");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            System.err.println("Error de SQL al intentar conectar con la base de datos.");
+            e.printStackTrace();
         }
         return conexion;
     }
