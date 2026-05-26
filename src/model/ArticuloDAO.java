@@ -9,9 +9,6 @@ import java.util.List;
 
 public class ArticuloDAO {
 
-    /**
-     * Recupera los artículos mapeándolos a objetos "a pelo" de tipo Articulo.
-     */
     public List<Articulo> obtenerArticulosAlmacen() {
         List<Articulo> lista = new ArrayList<>();
         String sql = "SELECT A.id_articulo, A.nombre, A.stock_actual, A.capacidad_maxima, P.nombre AS proveedor " +
@@ -20,11 +17,17 @@ public class ArticuloDAO {
 
         try {
             Connection con = ConexionBD.getConexion();
+
+            // --- EL SEGURO DE VIDA ---
+            if (con == null) {
+                System.err.println("Conexión nula: No se puede obtener el almacén.");
+                return lista;
+            }
+
             try (PreparedStatement ps = con.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    // Mapeamos los datos de la fila a nuestro molde "Articulo"
                     Articulo art = new Articulo(
                             rs.getInt("id_articulo"),
                             rs.getString("nombre"),
@@ -47,6 +50,10 @@ public class ArticuloDAO {
         String sqlUpdate = "UPDATE Articulos_Almacen SET stock_actual = stock_actual - 1 WHERE id_articulo = ?";
         try {
             Connection con = ConexionBD.getConexion();
+
+            // --- EL SEGURO DE VIDA ---
+            if (con == null) return false;
+
             // 1. Restamos una unidad del stock
             try (PreparedStatement psUpdate = con.prepareStatement(sqlUpdate)) {
                 psUpdate.setInt(1, idArticulo);
@@ -60,7 +67,7 @@ public class ArticuloDAO {
                         int stock = rs.getInt("stock_actual");
                         int max = rs.getInt("capacidad_maxima");
                         double porcentaje = ((double) stock / max) * 100;
-                        return porcentaje <= 7.0; // Devuelve true si está en alerta
+                        return porcentaje <= 7.0;
                     }
                 }
             }
@@ -68,5 +75,31 @@ public class ArticuloDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Busca el ID de un artículo en la base de datos según su nombre.
+     */
+    public int buscarIdPorNombre(String nombreArticulo) {
+        String sql = "SELECT id_article FROM Articulos_Almacen WHERE nombre LIKE ? LIMIT 1";
+        // Nota: Revisa si en tu script SQL pusiste id_articulo o id_article. He usado id_articulo por homogeneidad.
+        String sqlCorregida = "SELECT id_articulo FROM Articulos_Almacen WHERE nombre LIKE ? LIMIT 1";
+
+        try {
+            Connection con = ConexionBD.getConexion();
+            if (con == null) return -1;
+
+            try (PreparedStatement ps = con.prepareStatement(sqlCorregida)) {
+                ps.setString(1, "%" + nombreArticulo + "%");
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("id_articulo");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // No encontrado
     }
 }

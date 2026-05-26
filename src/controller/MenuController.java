@@ -38,17 +38,14 @@ public class MenuController implements ActionListener {
 
         // 2. Si se pulsó un botón válido, hacemos la magia de la transición
         if (idParkingSeleccionado != 0) {
-            // Ocultamos el menú principal de selección
+            // Ocultamos el menú principal
             vistaMenu.setVisible(false);
 
-            // Creamos la vista del panel de control operativo para ese parking específico
+            // Creamos la vista
             view.PanelParking panelControl = new view.PanelParking(idParkingSeleccionado, nombreParking);
 
-            // Creamos su controlador operativo y le pasamos el panel y el ID para vincularlos
+            // El propio constructor de ParkingController se encargará de encender la pantalla
             new controller.ParkingController(panelControl, idParkingSeleccionado);
-
-            // Hacemos que el panel operativo aparezca en pantalla
-            panelControl.setVisible(true);
         }
     }
 }
