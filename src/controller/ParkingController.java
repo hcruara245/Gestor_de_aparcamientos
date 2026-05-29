@@ -1,10 +1,7 @@
 package controller;
 
+import model.*;
 import view.PanelParking;
-import model.EstanciaDAO;
-import model.Estancia;
-import model.ArticuloDAO;
-import model.Articulo;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
@@ -14,13 +11,14 @@ import java.util.List;
 
 /**
  * Controlador para la gestión operativa de un parking concreto.
- * Maneja tanto el flujo de vehículos como el inventario del taller de forma optimizada.
+ * Maneja tanto el flujo de vehículos como el inventario y el personal de forma optimizada.
  */
 public class ParkingController implements ActionListener {
 
     private PanelParking vista;
     private EstanciaDAO estanciaDao;
     private ArticuloDAO articuloDao;
+    private TrabajadorDAO trabajadorDao;
     private int idParking;
 
     public ParkingController(PanelParking vista, int idParking) {
@@ -28,24 +26,24 @@ public class ParkingController implements ActionListener {
         this.idParking = idParking;
         this.estanciaDao = new EstanciaDAO();
         this.articuloDao = new ArticuloDAO();
+        this.trabajadorDao = new TrabajadorDAO();
 
-        // --- CONEXIÓN DE LISTENERS DE LA PESTAÑA 1 (ACCESOS) ---
+        // --- CONEXIÓN DE LISTENERS ---
         this.vista.getBtnRegistrarEntrada().addActionListener(this);
         this.vista.getBtnRegistrarSalida().addActionListener(this);
-
-        // --- CONEXIÓN DE LISTENERS DE LA PESTAÑA 2 (SERVICIOS e INVENTARIO) ---
         this.vista.getBtnRefrescarStock().addActionListener(this);
         this.vista.getBtnContratarLavado().addActionListener(this);
 
-        // >>> OPTIMIZACIÓN CRÍTICA: Primero abrimos la ventana YA de forma instantánea <<<
+        // Abrimos la interfaz al milisegundo de forma instantánea
         this.vista.setVisible(true);
 
-        // >>> Carga inicial en un hilo secundario para evitar congelar la interfaz con la red remota <<<
+        // >>> OPTIMIZACIÓN DE RED: Hilos secundarios para cargar MySQL sin congelar la app <<<
         new Thread(() -> {
             try {
                 refrescarPantallaInventario();
+                refrescarPantallaPersonal();
             } catch (Exception ex) {
-                System.err.println("Aviso: Fallo en la carga inicial de inventario en segundo plano.");
+                System.err.println("Aviso: Fallo en la precarga de datos remotos.");
                 ex.printStackTrace();
             }
         }).start();
@@ -61,7 +59,6 @@ public class ParkingController implements ActionListener {
         }
         // Pestaña 2: Inventario y Servicios
         else if (e.getSource() == vista.getBtnRefrescarStock()) {
-            // Refrescamos usando un hilo para no congelar el botón al clicar
             new Thread(this::refrescarPantallaInventario).start();
         } else if (e.getSource() == vista.getBtnContratarLavado()) {
             gestionarContratacionLavado();
@@ -128,19 +125,16 @@ public class ParkingController implements ActionListener {
      * Recupera los objetos Articulo del DAO y actualiza la JList sin parpadeos.
      */
     private void refrescarPantallaInventario() {
-        // 1. Pedimos la lista de objetos de entidad al DAO PRIMERO (La red trabaja aquí)
         List<Articulo> articulos = articuloDao.obtenerArticulosAlmacen();
 
-        // 2. Si la conexión falla o vuelve vacía, salimos sin vaciar la pantalla actual
         if (articulos == null || articulos.isEmpty()) {
             System.err.println("Aviso: No se recibieron datos del servidor, manteniendo vista previa.");
             return;
         }
 
-        // 3. Como ya tenemos los datos seguros, limpiamos y rellenamos en el hilo de la interfaz
         javax.swing.SwingUtilities.invokeLater(() -> {
             DefaultListModel<String> modeloLista = vista.getModeloListaAlmacen();
-            modeloLista.clear(); // Ahora sí limpiamos, justo antes de meter los nuevos
+            modeloLista.clear();
 
             for (Articulo art : articulos) {
                 double porc = art.getPorcentajeStock();
@@ -158,20 +152,16 @@ public class ParkingController implements ActionListener {
      * Simula la contratación de un lavado buscando de forma dinámica el artículo correcto en la BBDD.
      */
     private void gestionarContratacionLavado() {
-        // Buscamos dinámicamente qué ID tiene el jabón en tu base de datos actual por su nombre
         int idJabonReal = articuloDao.buscarIdPorNombre("Jabón");
 
         if (idJabonReal == -1) {
-            // Respaldo de seguridad en caso de que no encuentre la palabra exacta en la tabla
             idJabonReal = 2;
         }
 
-        // Consumimos una unidad del ID correcto en el servidor remoto
         boolean esCritico = articuloDao.usarArticulo(idJabonReal);
 
         JOptionPane.showMessageDialog(vista, "🧼 Lavado Premium registrado con éxito.\nSe ha añadido 15.00€ a la cuenta del taller.", "Servicio Añadido", JOptionPane.INFORMATION_MESSAGE);
 
-        // Mecánica reactiva: si cae por debajo del 7%, alertamos inmediatamente en un aviso flotante
         if (esCritico) {
             JOptionPane.showMessageDialog(vista,
                     "🚨 ¡ALERTA DE ALMACÉN!\nEl stock de consumibles de lavado ha bajado del 7%.\nPor favor, genera una orden de pedido al proveedor.",
@@ -179,7 +169,33 @@ public class ParkingController implements ActionListener {
                     JOptionPane.WARNING_MESSAGE);
         }
 
-        // Refrescamos automáticamente la pantalla usando hilos para que refresque al instante
         new Thread(this::refrescarPantallaInventario).start();
+    }
+
+    // ==========================================
+    //       LÓGICA DEL MÓDULO DE PERSONAL
+    // ==========================================
+
+    /**
+     * Recupera los empleados asignados a este parking y rellena la JTable de forma limpia.
+     */
+    private void refrescarPantallaPersonal() {
+        List<model.Trabajador> listaPersonal = trabajadorDao.obtenerPersonalPorParking(idParking);
+
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            javax.swing.table.DefaultTableModel modeloTabla = vista.getModeloTablaPersonal();
+            modeloTabla.setRowCount(0);
+
+            for (model.Trabajador t : listaPersonal) {
+                Object[] fila = new Object[]{
+                        t.getNombreCompleto(),
+                        t.getDni(),
+                        t.getPuesto(),
+                        t.getTurnoAsignado(),
+                        t.getHorarioHoras()
+                };
+                modeloTabla.addRow(fila);
+            }
+        });
     }
 }

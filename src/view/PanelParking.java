@@ -22,6 +22,8 @@ public class PanelParking extends JFrame {
     private DefaultListModel<String> modeloListaAlmacen;
     private JButton btnContratarLavado;
     private JButton btnRefrescarStock;
+    private JTable tablaPersonal;
+    private javax.swing.table.DefaultTableModel modeloTablaPersonal;
 
     public PanelParking(int idParking, String nombreParking) {
         this.idParking = idParking;
@@ -117,15 +119,43 @@ public class PanelParking extends JFrame {
      * Pestaña 3: Vista de la plantilla del personal asignado al parking.
      */
     private JPanel crearPanelPersonal() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(15, 15));
         panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel placeholder = new JLabel("Aquí controlaremos los turnos activos de los 16 trabajadores.", SwingConstants.CENTER);
-        placeholder.setFont(new Font("Arial", Font.ITALIC, 13));
-        panel.add(placeholder, BorderLayout.CENTER);
+        // Título de la sección
+        JLabel lblTituloSeccion = new JLabel("Cuadrante de Personal Activo en esta Sucursal", SwingConstants.LEFT);
+        lblTituloSeccion.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTituloSeccion.setForeground(new Color(51, 65, 85));
+        panel.add(lblTituloSeccion, BorderLayout.NORTH);
+
+        // Definimos las columnas de la tabla cuadrante
+        String[] columnas = {"Nombre Completo", "DNI", "Puesto / Rol", "Turno", "Horario Activo"};
+
+        // Creamos el modelo de la tabla bloqueando la edición directa de las celdas
+        modeloTablaPersonal = new javax.swing.table.DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // No modificable desde la interfaz directamente
+            }
+        };
+
+        // Inicializamos la JTable con su modelo
+        tablaPersonal = new JTable(modeloTablaPersonal);
+        tablaPersonal.setFont(new Font("Arial", Font.PLAIN, 12));
+        tablaPersonal.setRowHeight(25); // Espacio generoso para cada fila
+        tablaPersonal.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        tablaPersonal.getTableHeader().setReorderingAllowed(false); // Bloquear mover columnas
+
+        // Metemos la tabla dentro de un JScrollPane para que tenga scroll si se llena
+        JScrollPane scrollTabla = new JScrollPane(tablaPersonal);
+        panel.add(scrollTabla, BorderLayout.CENTER);
 
         return panel;
     }
+
+    // Getter para que el controlador pueda rellenar los datos de la tabla
+    public javax.swing.table.DefaultTableModel getModeloTablaPersonal() { return modeloTablaPersonal; }
 
     /**
      * Pestaña 2: Contratación de servicios y alertas automáticas de inventario.
