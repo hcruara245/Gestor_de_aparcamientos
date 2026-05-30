@@ -18,9 +18,8 @@ public class ArticuloDAO {
         try {
             Connection con = ConexionBD.getConexion();
 
-            // --- EL SEGURO DE VIDA ---
             if (con == null) {
-                System.err.println("Conexión nula: No se puede obtener el almacén.");
+                System.err.println("Conexión nula: No se puede acceder al almacén.");
                 return lista;
             }
 
@@ -45,21 +44,29 @@ public class ArticuloDAO {
         return lista;
     }
 
+    /**
+     * Resta una unidad de stock si quedan existencias y avisa si cae en nivel critico.
+     */
     public boolean usarArticulo(int idArticulo) {
-        String sqlBuscar = "SELECT stock_actual, capacidad_maxima, nombre FROM Articulos_Almacen WHERE id_articulo = ?";
-        String sqlUpdate = "UPDATE Articulos_Almacen SET stock_actual = stock_actual - 1 WHERE id_articulo = ?";
+        String sqlBuscar = "SELECT stock_actual, capacidad_maxima FROM Articulos_Almacen WHERE id_articulo = ?";
+        String sqlUpdate = "UPDATE Articulos_Almacen SET stock_actual = stock_actual - 1 WHERE id_articulo = ? AND stock_actual > 0";
+
         try {
             Connection con = ConexionBD.getConexion();
-
-            // --- EL SEGURO DE VIDA ---
             if (con == null) return false;
 
-            // 1. Restamos una unidad del stock
+            // Intentamos restar la unidad en la base de datos
             try (PreparedStatement psUpdate = con.prepareStatement(sqlUpdate)) {
                 psUpdate.setInt(1, idArticulo);
-                psUpdate.executeUpdate();
+                int filasAfectadas = psUpdate.executeUpdate();
+
+                // Si no se modifica ninguna fila es porque el stock ya estaba a 0
+                if (filasAfectadas == 0) {
+                    throw new RuntimeException("SIN_STOCK");
+                }
             }
-            // 2. Comprobamos cómo ha quedado el porcentaje
+
+            // Consultamos el estado final para verificar si el stock entra en alerta
             try (PreparedStatement psBuscar = con.prepareStatement(sqlBuscar)) {
                 psBuscar.setInt(1, idArticulo);
                 try (ResultSet rs = psBuscar.executeQuery()) {
@@ -67,6 +74,7 @@ public class ArticuloDAO {
                         int stock = rs.getInt("stock_actual");
                         int max = rs.getInt("capacidad_maxima");
                         double porcentaje = ((double) stock / max) * 100;
+
                         return porcentaje <= 7.0;
                     }
                 }
@@ -78,18 +86,16 @@ public class ArticuloDAO {
     }
 
     /**
-     * Busca el ID de un artículo en la base de datos según su nombre.
+     * Devuelve el ID del articulo filtrando por similitud en el nombre.
      */
     public int buscarIdPorNombre(String nombreArticulo) {
-        String sql = "SELECT id_article FROM Articulos_Almacen WHERE nombre LIKE ? LIMIT 1";
-        // Nota: Revisa si en tu script SQL pusiste id_articulo o id_article. He usado id_articulo por homogeneidad.
-        String sqlCorregida = "SELECT id_articulo FROM Articulos_Almacen WHERE nombre LIKE ? LIMIT 1";
+        String sql = "SELECT id_articulo FROM Articulos_Almacen WHERE nombre LIKE ? LIMIT 1";
 
         try {
             Connection con = ConexionBD.getConexion();
             if (con == null) return -1;
 
-            try (PreparedStatement ps = con.prepareStatement(sqlCorregida)) {
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
                 ps.setString(1, "%" + nombreArticulo + "%");
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
@@ -100,6 +106,6 @@ public class ArticuloDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1; // No encontrado
+        return -1;
     }
 }

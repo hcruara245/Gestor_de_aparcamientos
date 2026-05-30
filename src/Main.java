@@ -1,6 +1,9 @@
 import javax.swing.SwingUtilities;
+
+import controller.AdminController;
 import view.MenuPrincipal;
 import controller.MenuController; // Importamos el nuevo controlador
+import view.PanelAdmin;
 
 public class Main {
     public static void main(String[] args) {
@@ -15,5 +18,7 @@ public class Main {
                 ventanaMenu.setVisible(true);
             }
         });
+        PanelAdmin vistaAdmin = new PanelAdmin();
+        new AdminController(vistaAdmin);
     }
 }

@@ -1,3 +1,6 @@
+-- BORRADO DE BBDD PARA PRUEBAS
+DROP database parking_db;
+
 -- Creación de la Base de Datos
 CREATE DATABASE IF NOT EXISTS parking_db;
 USE parking_db;

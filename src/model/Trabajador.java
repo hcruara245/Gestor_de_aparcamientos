@@ -1,42 +1,36 @@
 package model;
 
 /**
- * Clase Entidad que representa un empleado de la plantilla "a pelo".
- * Mapea los datos de la tabla Trabajadores de la base de datos remota.
+ * Entidad que mapea los datos de un empleado y su horario actual.
  */
 public class Trabajador {
 
-    private int idTrabajador;
+    private String dni; // Es la clave primaria real en tu tabla Empleados
     private String nombre;
     private String apellidos;
-    private String dni;
-    private String puesto;         // Ej: "Mecánico", "Administrativo", "Coordinador"
-    private String turnoAsignado;  // Campo extra muy útil para los JOINs (Ej: "Mañana", "Tarde", "Noche")
-    private String horarioHoras;   // Campo extra para pintar el intervalo (Ej: "06:00 - 14:00")
+    private String puesto;
+    private String turnoAsignado;  // Campo calculado para los JOINs en la interfaz
+    private String horarioHoras;   // Campo calculado para mostrar las horas del turno
 
-    // Constructor completo para cuando recuperamos los datos del personal con sus turnos de la BBDD
-    public Trabajador(int idTrabajador, String nombre, String apellidos, String dni, String puesto, String turnoAsignado, String horarioHoras) {
-        this.idTrabajador = idTrabajador;
+    // Constructor para recuperar los datos del personal de la base de datos
+    public Trabajador(String dni, String nombre, String apellidos, String puesto, String turnoAsignado, String horarioHoras) {
+        this.dni = dni;
         this.nombre = nombre;
         this.apellidos = apellidos;
-        this.dni = dni;
         this.puesto = puesto;
         this.turnoAsignado = turnoAsignado;
         this.horarioHoras = horarioHoras;
     }
 
-    /**
-     * Método de negocio simple para obtener el nombre completo formateado.
-     */
+    // Devuelve el nombre y apellidos maquetados en una sola cadena
     public String getNombreCompleto() {
         return this.nombre + " " + this.apellidos;
     }
 
     // --- GETTERS Y SETTERS ---
-    public int getIdTrabajador() { return idTrabajador; }
+    public String getDni() { return dni; }
     public String getNombre() { return nombre; }
     public String getApellidos() { return apellidos; }
-    public String getDni() { return dni; }
     public String getPuesto() { return puesto; }
     public String getTurnoAsignado() { return turnoAsignado; }
     public String getHorarioHoras() { return horarioHoras; }

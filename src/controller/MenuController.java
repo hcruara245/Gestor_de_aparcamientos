@@ -1,21 +1,18 @@
 package controller;
 
 import view.MenuPrincipal;
+import view.PanelParking;
+import view.PanelAdmin; // Importamos el nuevo panel de administración
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * Controlador para el Menú Principal.
- * Gestiona los clics de la vista y decide qué base de datos/parking controlar.
- */
 public class MenuController implements ActionListener {
 
     private MenuPrincipal vistaMenu;
 
     public MenuController(MenuPrincipal vistaMenu) {
         this.vistaMenu = vistaMenu;
-
-        // Le decimos a la vista que este controlador escuchará sus botones
         this.vistaMenu.conectarListeners(this);
     }
 
@@ -24,7 +21,7 @@ public class MenuController implements ActionListener {
         int idParkingSeleccionado = 0;
         String nombreParking = "";
 
-        // 1. Identificamos qué botón ha levantado el evento
+        // Comprobamos qué sucursal ha seleccionado el operario
         if (e.getSource() == vistaMenu.getBtnParkingNorte()) {
             idParkingSeleccionado = 1;
             nombreParking = "Parking Los Panteras - Norte";
@@ -36,16 +33,13 @@ public class MenuController implements ActionListener {
             nombreParking = "Parking Los Panteras - Sur";
         }
 
-        // 2. Si se pulsó un botón válido, hacemos la magia de la transición
+        // Si es un parking válido, ocultamos el menú y abrimos el panel operativo
         if (idParkingSeleccionado != 0) {
-            // Ocultamos el menú principal
             vistaMenu.setVisible(false);
 
-            // Creamos la vista
-            view.PanelParking panelControl = new view.PanelParking(idParkingSeleccionado, nombreParking);
-
-            // El propio constructor de ParkingController se encargará de encender la pantalla
-            new controller.ParkingController(panelControl, idParkingSeleccionado);
+            // Los imports de arriba limpian el código de rutas largas
+            PanelParking panelControl = new PanelParking(idParkingSeleccionado, nombreParking);
+            new ParkingController(panelControl, idParkingSeleccionado);
         }
     }
 }

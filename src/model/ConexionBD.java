@@ -5,12 +5,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Clase encargada de gestionar la conexión con la base de datos MySQL.
- * Sigue el patrón Singleton para mantener una única conexión activa.
+ * Gestiona la conexión con la base de datos MySQL usando el patrón Singleton.
  */
 public class ConexionBD {
 
-    // Datos de configuración de tu base de datos local
     private static final String URL = "jdbc:mysql://172.22.242.195:3306/parking_db";
     private static final String USER = "root";
     private static final String PASSWORD = "root";
@@ -18,45 +16,36 @@ public class ConexionBD {
     private static Connection conexion = null;
 
     /**
-     * Método para obtener la conexión activa a la base de datos.
-     * @return Connection objeto de conexión listo para usar.
-     */
-    /**
-     * Método para obtener la conexión activa a la base de datos.
-     * Si la conexión se cerró, abre una nueva de forma automática.
+     * Devuelve la conexión activa. Si no existe o se cerró, abre una nueva.
      */
     public static Connection getConexion() {
         try {
-            // Si la conexión es nula O un método la cerró previamente, abrimos una nueva
             if (conexion == null || conexion.isClosed()) {
-                // Cargamos el driver de MySQL
                 Class.forName("com.mysql.cj.jdbc.Driver");
-
-                // Establecemos la conexión remota
                 conexion = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("Conexión con 'parking_db' establecida (o restaurada) correctamente.");
+                System.out.println("Conexión con 'parking_db' establecida correctamente.");
             }
         } catch (ClassNotFoundException e) {
-            System.err.println("Error: No se encontró el Driver de MySQL en las librerías.");
+            System.err.println("Error: No se encontró el Driver de MySQL.");
             e.printStackTrace();
         } catch (SQLException e) {
-            System.err.println("Error de SQL al intentar conectar con la base de datos.");
+            System.err.println("Error de SQL al conectar con la base de datos.");
             e.printStackTrace();
         }
         return conexion;
     }
 
     /**
-     * Método para cerrar la conexión de forma segura al cerrar la aplicación.
+     * Cierra la conexión de forma segura al terminar la ejecución.
      */
     public static void cerrarConexion() {
         if (conexion != null) {
             try {
                 conexion.close();
                 conexion = null;
-                System.out.println("Conexión con la base de datos cerrada de forma segura.");
+                System.out.println("Conexión con la base de datos cerrada.");
             } catch (SQLException e) {
-                System.err.println("Error al intentar cerrar la base de datos.");
+                System.err.println("Error al cerrar la base de datos.");
                 e.printStackTrace();
             }
         }

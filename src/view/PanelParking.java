@@ -1,113 +1,123 @@
 package view;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 
-/**
- * Vista principal de gestión para un aparcamiento específico.
- * Utiliza pestañas para organizar de forma intuitiva los módulos del sistema.
- */
 public class PanelParking extends JFrame {
 
     private int idParking;
     private String nombreParking;
 
-    // Componentes del Módulo 1: Accesos y Estancias
+    // Componentes del Módulo de Accesos
     private JTextField txtMatricula;
-    private JComboBox<String> comboTipoUsuario;
     private JButton btnRegistrarEntrada;
     private JButton btnRegistrarSalida;
     private JCheckBox chkTicketCC;
+    private JCheckBox chkPerdidaTarjeta;
+    private JButton btnEliminarEmpleado;
+
+    // Componentes del Módulo de Almacén y Servicios
     private JList<String> listaAlmacen;
     private DefaultListModel<String> modeloListaAlmacen;
-    private JButton btnContratarLavado;
+    private JButton btnContratarLavadoExterior; // Nuevo servicio básico
+    private JButton btnContratarLavadoPremium;  // El de 5.41€
+    private JButton btnContratarAceite;
     private JButton btnRefrescarStock;
+
+    // Componentes del Módulo de Personal
     private JTable tablaPersonal;
     private javax.swing.table.DefaultTableModel modeloTablaPersonal;
+
 
     public PanelParking(int idParking, String nombreParking) {
         this.idParking = idParking;
         this.nombreParking = nombreParking;
 
-        // Configuración de la ventana
         setTitle("Gestión Operativa - " + nombreParking);
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Solo cierra este panel, no toda la app
+        setSize(850, 620);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Contenedor base
         JPanel panelBase = new JPanel(new BorderLayout());
-        panelBase.setBackground(new Color(245, 247, 250));
+        panelBase.setBackground(new Color(240, 244, 248));
 
-        // 1. ENCABEZADO SUPERIOR INFO
+        // Encabezado superior
         JPanel panelHeader = new JPanel(new BorderLayout());
-        panelHeader.setBackground(new Color(33, 43, 54));
-        panelHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        panelHeader.setBackground(new Color(30, 41, 59));
+        panelHeader.setBorder(BorderFactory.createEmptyBorder(18, 25, 18, 25));
 
         JLabel lblTitulo = new JLabel("PANEL DE CONTROL: " + nombreParking.toUpperCase(), SwingConstants.LEFT);
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 16));
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTitulo.setForeground(Color.WHITE);
 
         JLabel lblInfoCadenas = new JLabel("CC Los Panteras | ID: " + idParking, SwingConstants.RIGHT);
-        lblInfoCadenas.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblInfoCadenas.setForeground(new Color(145, 158, 171));
+        lblInfoCadenas.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblInfoCadenas.setForeground(new Color(148, 163, 184));
 
         panelHeader.add(lblTitulo, BorderLayout.WEST);
         panelHeader.add(lblInfoCadenas, BorderLayout.EAST);
         panelBase.add(panelHeader, BorderLayout.NORTH);
 
-        // 2. SISTEMA DE PESTAÑAS CENTRAL (JTabbedPane)
         JTabbedPane pestañas = new JTabbedPane();
-        pestañas.setFont(new Font("Arial", Font.BOLD, 13));
+        pestañas.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        pestañas.setBackground(Color.WHITE);
 
-        // Añadimos las 3 secciones estructuradas
-        pestañas.addTab("📥 Control de Accesos", crearPanelAccesos());
-        pestañas.addTab("🔧 Servicios e Inventario", crearPanelServicios());
-        pestañas.addTab("👥 Personal y Turnos", crearPanelPersonal());
+        pestañas.addTab("Control de Accesos", crearPanelAccesos());
+        pestañas.addTab("Servicios e Inventario", crearPanelServicios());
+        pestañas.addTab("Personal y Turnos", crearPanelPersonal());
 
         panelBase.add(pestañas, BorderLayout.CENTER);
         add(panelBase);
     }
 
-    /**
-     * Pestaña 1: Registro de Entradas y Salidas de vehículos.
-     */
     private JPanel crearPanelAccesos() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(15, 15, 15, 15);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Formulario de entrada
-        JLabel lblMatricula = new JLabel("Matrícula del Vehículo:");
-        lblMatricula.setFont(new Font("Arial", Font.BOLD, 13));
-        txtMatricula = new JTextField(12);
-        txtMatricula.setFont(new Font("Arial", Font.PLAIN, 14));
+        JLabel lblMatricula = new JLabel("Matrícula / DNI:");
+        lblMatricula.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JLabel lblTipo = new JLabel("Tipo de Cliente:");
-        comboTipoUsuario = new JComboBox<>(new String[]{"Usuario Normal", "Abonado", "Trabajador"});
+        txtMatricula = new JTextField(15);
+        txtMatricula.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txtMatricula.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(203, 213, 225), 1),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        ));
 
         chkTicketCC = new JCheckBox("Presenta ticket de compra CC (2h gratis)");
+        chkTicketCC.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         chkTicketCC.setOpaque(false);
 
-        btnRegistrarEntrada = new JButton("Registrar Entrada");
-        btnRegistrarSalida = new JButton("Registrar Salida y Cobrar");
+        chkPerdidaTarjeta = new JCheckBox("El usuario ha perdido la tarjeta (Multa 24,04€)");
+        chkPerdidaTarjeta.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        chkPerdidaTarjeta.setForeground(new Color(239, 68, 68));
+        chkPerdidaTarjeta.setOpaque(false);
 
-        // Estilos rápidos a los botones de acción
+        btnRegistrarEntrada = new JButton("Registrar Entrada");
+        btnRegistrarEntrada.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRegistrarEntrada.setBackground(new Color(34, 197, 94));
         btnRegistrarEntrada.setForeground(Color.WHITE);
-        btnRegistrarSalida.setBackground(new Color(59, 130, 246));
-        btnRegistrarSalida.setForeground(Color.WHITE);
+        btnRegistrarEntrada.setFocusPainted(false);
+        btnRegistrarEntrada.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Posicionar elementos en el Layout de forma intuitiva
+        btnRegistrarSalida = new JButton("Registrar Salida y Cobrar");
+        btnRegistrarSalida.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnRegistrarSalida.setBackground(new Color(37, 99, 235));
+        btnRegistrarSalida.setForeground(Color.WHITE);
+        btnRegistrarSalida.setFocusPainted(false);
+        btnRegistrarSalida.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         gbc.gridx = 0; gbc.gridy = 0; panel.add(lblMatricula, gbc);
         gbc.gridx = 1; panel.add(txtMatricula, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(lblTipo, gbc);
-        gbc.gridx = 1; panel.add(comboTipoUsuario, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; panel.add(chkTicketCC, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2; panel.add(chkTicketCC, gbc);
+        gbc.gridy = 2; panel.add(chkPerdidaTarjeta, gbc);
 
         gbc.gridy = 3; gbc.gridwidth = 1; gbc.gridx = 0; panel.add(btnRegistrarEntrada, gbc);
         gbc.gridx = 1; panel.add(btnRegistrarSalida, gbc);
@@ -115,87 +125,68 @@ public class PanelParking extends JFrame {
         return panel;
     }
 
-    /**
-     * Pestaña 3: Vista de la plantilla del personal asignado al parking.
-     */
-    private JPanel crearPanelPersonal() {
-        JPanel panel = new JPanel(new BorderLayout(15, 15));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Título de la sección
-        JLabel lblTituloSeccion = new JLabel("Cuadrante de Personal Activo en esta Sucursal", SwingConstants.LEFT);
-        lblTituloSeccion.setFont(new Font("Arial", Font.BOLD, 14));
-        lblTituloSeccion.setForeground(new Color(51, 65, 85));
-        panel.add(lblTituloSeccion, BorderLayout.NORTH);
-
-        // Definimos las columnas de la tabla cuadrante
-        String[] columnas = {"Nombre Completo", "DNI", "Puesto / Rol", "Turno", "Horario Activo"};
-
-        // Creamos el modelo de la tabla bloqueando la edición directa de las celdas
-        modeloTablaPersonal = new javax.swing.table.DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // No modificable desde la interfaz directamente
-            }
-        };
-
-        // Inicializamos la JTable con su modelo
-        tablaPersonal = new JTable(modeloTablaPersonal);
-        tablaPersonal.setFont(new Font("Arial", Font.PLAIN, 12));
-        tablaPersonal.setRowHeight(25); // Espacio generoso para cada fila
-        tablaPersonal.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
-        tablaPersonal.getTableHeader().setReorderingAllowed(false); // Bloquear mover columnas
-
-        // Metemos la tabla dentro de un JScrollPane para que tenga scroll si se llena
-        JScrollPane scrollTabla = new JScrollPane(tablaPersonal);
-        panel.add(scrollTabla, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    // Getter para que el controlador pueda rellenar los datos de la tabla
-    public javax.swing.table.DefaultTableModel getModeloTablaPersonal() { return modeloTablaPersonal; }
-
-    /**
-     * Pestaña 2: Contratación de servicios y alertas automáticas de inventario.
-     */
     private JPanel crearPanelServicios() {
-        JPanel panel = new JPanel(new BorderLayout(15, 15));
+        JPanel panel = new JPanel(new BorderLayout(25, 25));
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
-        // --- ZONA IZQUIERDA: CONTRATACIÓN DE SERVICIOS ADICIONALES ---
+        // Paneles de acciones (Izquierda) - Ahora con 3 filas para albergar ambos lavados y el aceite
         JPanel panelAcciones = new JPanel(new GridLayout(3, 1, 0, 15));
         panelAcciones.setOpaque(false);
-        panelAcciones.setBorder(BorderFactory.createTitledBorder("Servicios Disponibles"));
 
-        btnContratarLavado = new JButton("🧼 Contratar Lavado Premium (15.00€)");
-        btnContratarLavado.setFont(new Font("Arial", Font.BOLD, 12));
-        btnContratarLavado.setBackground(new Color(243, 244, 246));
+        TitledBorder bordeServicios = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1), "Servicios Disponibles"
+        );
+        bordeServicios.setTitleFont(new Font("Segoe UI", Font.BOLD, 13));
+        panelAcciones.setBorder(bordeServicios);
 
-        JButton btnContratarAceite = new JButton("🔧 Cambio de Aceite (45.00€)");
-        btnContratarAceite.setFont(new Font("Arial", Font.BOLD, 12));
-        btnContratarAceite.setBackground(new Color(243, 244, 246));
-        btnContratarAceite.setEnabled(false); // De momento desactivado por pruebas
+        // Instanciación de los 3 botones oficiales exigidos
+        btnContratarLavadoExterior = new JButton("Contratar Lavado Exterior (3.00€)");
+        btnContratarLavadoExterior.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btnContratarLavadoExterior.setBackground(new Color(248, 250, 252));
+        btnContratarLavadoExterior.setFocusPainted(false);
+        btnContratarLavadoExterior.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        panelAcciones.add(btnContratarLavado);
+        btnContratarLavadoPremium = new JButton("Contratar Lavado Completo (5.41€)");
+        btnContratarLavadoPremium.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btnContratarLavadoPremium.setBackground(new Color(248, 250, 252));
+        btnContratarLavadoPremium.setFocusPainted(false);
+        btnContratarLavadoPremium.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        btnContratarAceite = new JButton("Cambio de Aceite (21.04€)");
+        btnContratarAceite.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btnContratarAceite.setBackground(new Color(248, 250, 252));
+        btnContratarAceite.setFocusPainted(false);
+        btnContratarAceite.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Los agregamos secuencialmente al layout de la izquierda
+        panelAcciones.add(btnContratarLavadoExterior);
+        panelAcciones.add(btnContratarLavadoPremium);
         panelAcciones.add(btnContratarAceite);
         panel.add(panelAcciones, BorderLayout.WEST);
 
-        // --- ZONA DERECHA: MONITOR DE INVENTARIO (ALERTAS < 7%) ---
-        JPanel panelInventario = new JPanel(new BorderLayout(10, 10));
+        // Monitor de Almacén (Centro/Derecha)
+        JPanel panelInventario = new JPanel(new BorderLayout(12, 12));
         panelInventario.setOpaque(false);
-        panelInventario.setBorder(BorderFactory.createTitledBorder("Monitor de Stock Remoto"));
+
+        TitledBorder bordeAlmacen = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1), "Monitor de Stock"
+        );
+        bordeAlmacen.setTitleFont(new Font("Segoe UI", Font.BOLD, 13));
+        panelInventario.setBorder(bordeAlmacen);
 
         modeloListaAlmacen = new DefaultListModel<>();
         listaAlmacen = new JList<>(modeloListaAlmacen);
-        listaAlmacen.setFont(new Font("Consolas", Font.PLAIN, 12)); // Letra monoespaciada tipo terminal
+        listaAlmacen.setFont(new Font("Consolas", Font.PLAIN, 13));
+        listaAlmacen.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         JScrollPane scrollLista = new JScrollPane(listaAlmacen);
 
-        btnRefrescarStock = new JButton("🔄 Actualizar Inventario");
-        btnRefrescarStock.setBackground(new Color(99, 102, 241));
+        btnRefrescarStock = new JButton("Actualizar Inventario");
+        btnRefrescarStock.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnRefrescarStock.setBackground(new Color(79, 70, 229));
         btnRefrescarStock.setForeground(Color.WHITE);
+        btnRefrescarStock.setFocusPainted(false);
+        btnRefrescarStock.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         panelInventario.add(scrollLista, BorderLayout.CENTER);
         panelInventario.add(btnRefrescarStock, BorderLayout.SOUTH);
@@ -205,14 +196,63 @@ public class PanelParking extends JFrame {
         return panel;
     }
 
-    // Getters necesarios para el controlador
-    public JButton getBtnContratarLavado() { return btnContratarLavado; }
-    public JButton getBtnRefrescarStock() { return btnRefrescarStock; }
-    public DefaultListModel<String> getModeloListaAlmacen() { return modeloListaAlmacen; }
+    private JPanel crearPanelPersonal() {
+        JPanel panel = new JPanel(new BorderLayout(20, 20));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
+        JLabel lblTituloSeccion = new JLabel("Cuadrante de Personal Activo en esta Sucursal", SwingConstants.LEFT);
+        lblTituloSeccion.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTituloSeccion.setForeground(new Color(51, 65, 85));
+        panel.add(lblTituloSeccion, BorderLayout.NORTH);
+
+        String[] columnas = {"Nombre Completo", "DNI", "Puesto / Rol", "Turno", "Horario Activo"};
+
+        modeloTablaPersonal = new javax.swing.table.DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tablaPersonal = new JTable(modeloTablaPersonal);
+        tablaPersonal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tablaPersonal.setRowHeight(28);
+        tablaPersonal.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tablaPersonal.getTableHeader().setReorderingAllowed(false);
+        tablaPersonal.setGridColor(new Color(241, 245, 249));
+
+        JScrollPane scrollTabla = new JScrollPane(tablaPersonal);
+        panel.add(scrollTabla, BorderLayout.CENTER);
+
+        btnEliminarEmpleado = new JButton("Dar de Baja Empleado Seleccionado");
+        btnEliminarEmpleado.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnEliminarEmpleado.setBackground(new Color(239, 68, 68));
+        btnEliminarEmpleado.setForeground(Color.WHITE);
+        btnEliminarEmpleado.setFocusPainted(false);
+        btnEliminarEmpleado.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelInferior.setOpaque(false);
+        panelInferior.add(btnEliminarEmpleado);
+
+        panel.add(panelInferior, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    // Getters actualizados
+    public javax.swing.table.DefaultTableModel getModeloTablaPersonal() { return modeloTablaPersonal; }
+    public DefaultListModel<String> getModeloListaAlmacen() { return modeloListaAlmacen; }
     public JTextField getTxtMatricula() { return txtMatricula; }
-    public JComboBox<String> getComboTipoUsuario() { return comboTipoUsuario; }
+    public JCheckBox getChkTicketCC() { return chkTicketCC; }
+    public JCheckBox getChkPerdidaTarjeta() { return chkPerdidaTarjeta; }
     public JButton getBtnRegistrarEntrada() { return btnRegistrarEntrada; }
     public JButton getBtnRegistrarSalida() { return btnRegistrarSalida; }
-    public JCheckBox getChkTicketCC() { return chkTicketCC; }
+    public JButton getBtnContratarLavadoExterior() { return btnContratarLavadoExterior; } // Nuevo
+    public JButton getBtnContratarLavadoPremium() { return btnContratarLavadoPremium; }   // Nuevo
+    public JButton getBtnContratarAceite() { return btnContratarAceite; }
+    public JButton getBtnRefrescarStock() { return btnRefrescarStock; }
+    public JButton getBtnEliminarEmpleado() { return btnEliminarEmpleado; }
+    public JTable getTablaPersonal() { return tablaPersonal; }
 }

@@ -9,7 +9,7 @@ public class Articulo {
     private int stockActual;
     private int capacidadMaxima;
     private int idProveedor;
-    private String nombreProveedor; // Campo extra útil para los JOINs en las vistas
+    private String nombreProveedor; // Campo util para los JOINs con la tabla proveedores
 
     public Articulo(int idArticulo, String nombre, int stockActual, int capacidadMaxima, String nombreProveedor) {
         this.idArticulo = idArticulo;
@@ -19,7 +19,7 @@ public class Articulo {
         this.nombreProveedor = nombreProveedor;
     }
 
-    // Método de negocio intuitivo: calcula el porcentaje de stock restante
+    // Calcula el porcentaje de existencias que quedan en el almacen
     public double getPorcentajeStock() {
         if (capacidadMaxima == 0) return 0;
         return ((double) stockActual / capacidadMaxima) * 100;

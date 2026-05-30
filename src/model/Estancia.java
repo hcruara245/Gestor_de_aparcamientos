@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * Clase Entidad que representa una fila de la tabla Estancias en memoria de Java.
+ * Entidad para representar los datos de una estancia en el parking.
  */
 public class Estancia {
     private int idEstancia;
@@ -18,7 +18,7 @@ public class Estancia {
     private boolean ticketCompraCC;
     private double totalPagar;
 
-    // Constructor para cuando registramos una ENTRADA nueva (no sabemos salida ni total)
+    // Constructor para registrar una entrada nueva en el momento
     public Estancia(String matricula, int idParking, int idCliente) {
         this.matricula = matricula;
         this.idParking = idParking;
@@ -29,7 +29,7 @@ public class Estancia {
         this.ticketCompraCC = false;
     }
 
-    // Constructor completo por si necesitamos recuperar todos los datos desde la BBDD
+    // Constructor completo para recuperar datos historicos de la BBDD
     public Estancia(int idEstancia, String matricula, int idParking, int idCliente,
                     LocalDate fechaEntrada, LocalTime horaEntrada, LocalDate fechaSalida,
                     LocalTime horaSalida, boolean ticketCompraCC, double totalPagar) {

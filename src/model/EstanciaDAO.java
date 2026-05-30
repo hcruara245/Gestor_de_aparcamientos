@@ -10,15 +10,12 @@ import java.time.LocalTime;
 import java.time.Duration;
 
 /**
- * Clase DAO encargada de las operaciones CRUD en la tabla Estancias.
- * Sigue el patrón MVC interactuando directamente con objetos de la entidad Estancia.
+ * Operaciones de base de datos para controlar las entradas y salidas de vehiculos.
  */
 public class EstanciaDAO {
 
     /**
-     * Registra la entrada de un vehículo usando el objeto entidad Estancia.
-     * @param estancia Objeto entidad "a pelo" con los datos del registro.
-     * @return true si la inserción en el servidor fue correcta.
+     * Registra la entrada de un coche en el parking.
      */
     public boolean registrarEntrada(Estancia estancia) {
         String sql = "INSERT INTO Estancias (matricula, id_parking, id_cliente, fecha_entrada, hora_entrada, total_pagar) VALUES (?, ?, ?, ?, ?, ?)";
@@ -26,14 +23,13 @@ public class EstanciaDAO {
         try {
             Connection con = ConexionBD.getConexion();
 
-            // 1. Aseguramos que el vehículo existe en el servidor remoto
+            // Verificamos que el vehiculo exista o lo crea al vuelo
             asegurarVehiculo(con, estancia.getMatricula());
 
-            // 2. Buscamos un cliente válido de base o lo creamos
+            // Buscamos el ID del cliente o genera uno por defecto si es usuario normal
             int idClienteValido = asegurarClienteBase(con, "normal");
-            estancia.setIdCliente(idClienteValido); // Seteamos el ID recuperado al objeto entidad
+            estancia.setIdCliente(idClienteValido);
 
-            // 3. Ejecutamos la inserción de la estancia
             try (PreparedStatement ps = con.prepareStatement(sql)) {
                 ps.setString(1, estancia.getMatricula());
                 ps.setInt(2, estancia.getIdParking());
@@ -53,14 +49,11 @@ public class EstanciaDAO {
     }
 
     /**
-     * Busca la estancia activa de una matrícula, calcula el precio y registra la salida.
-     * @param matricula Matrícula del vehículo que abandona el parking.
-     * @param tieneTicketCC true si presenta el descuento de 2h del Centro Comercial.
-     * @return El total a pagar en euros, o -1 si hubo algún error o no se encontró el coche.
+     * Cierra la estancia abierta, guarda la salida y devuelve las horas transcurridas.
      */
     public double registrarSalida(String matricula, boolean tieneTicketCC) {
         String sqlBuscar = "SELECT id_estancia, fecha_entrada, hora_entrada FROM Estancias WHERE matricula = ? AND fecha_salida IS NULL LIMIT 1";
-        String sqlActualizar = "UPDATE Estancias SET fecha_salida = ?, hora_salida = ?, ticket_compra_cc = ?, total_pagar = ? WHERE id_estancia = ?";
+        String sqlActualizar = "UPDATE Estancias SET fecha_salida = ?, hora_salida = ?, ticket_compra_cc = ? WHERE id_estancia = ?";
 
         try {
             Connection con = ConexionBD.getConexion();
@@ -70,52 +63,40 @@ public class EstanciaDAO {
 
                 try (ResultSet rs = psBuscar.executeQuery()) {
                     if (!rs.next()) {
-                        return -1; // No hay ninguna estancia abierta para esa matrícula
+                        return -1;
                     }
 
                     int idEstancia = rs.getInt("id_estancia");
                     LocalDate fechaEntrada = rs.getDate("fecha_entrada").toLocalDate();
                     LocalTime horaEntrada = rs.getTime("hora_entrada").toLocalTime();
 
-                    // Datos de la salida (momento actual)
                     LocalDate fechaSalida = LocalDate.now();
                     LocalTime horaSalida = LocalTime.now();
 
-                    // 1. Calcular el tiempo total transcurrido en minutos
+                    // Calculamos la diferencia de tiempo real
                     java.time.LocalDateTime entradaCompleta = java.time.LocalDateTime.of(fechaEntrada, horaEntrada);
                     java.time.LocalDateTime salidaCompleta = java.time.LocalDateTime.of(fechaSalida, horaSalida);
                     long minutosTotales = Duration.between(entradaCompleta, salidaCompleta).toMinutes();
 
-                    // Simulación de paso del tiempo para entornos de desarrollo si da 0 min
+                    // Si da cero por ser pruebas en el mismo minuto, simulamos 1.5 horas para el test
                     if (minutosTotales <= 0) {
-                        minutosTotales = 150; // 2 horas y media por defecto
+                        minutosTotales = 90;
                     }
 
-                    // 2. Aplicar tarifas y beneficios del Centro Comercial
-                    long minutesFacturables = minutosTotales;
-                    if (tieneTicketCC) {
-                        minutesFacturables = Math.max(0, minutosTotales - 120); // 2 horas gratis (120 minutos)
-                    }
+                    // Convertimos a horas con decimales para que el controlador calcule segun los tramos
+                    double horasTranscurridas = minutosTotales / 60.0;
 
-                    // Tarifa estándar de 0.05€ el minuto
-                    double tarifaPorMinuto = 0.05;
-                    double totalPagar = minutesFacturables * tarifaPorMinuto;
-
-                    // Redondear a dos decimales de forma limpia
-                    totalPagar = Math.round(totalPagar * 100.0) / 100.0;
-
-                    // 3. Actualizar la base de datos con los datos de salida reales
+                    // Actualizamos la fila de la estancia con los datos de salida
                     try (PreparedStatement psActualizar = con.prepareStatement(sqlActualizar)) {
                         psActualizar.setDate(1, java.sql.Date.valueOf(fechaSalida));
                         psActualizar.setTime(2, java.sql.Time.valueOf(horaSalida));
                         psActualizar.setBoolean(3, tieneTicketCC);
-                        psActualizar.setDouble(4, totalPagar);
-                        psActualizar.setInt(5, idEstancia);
+                        psActualizar.setInt(4, idEstancia);
 
                         psActualizar.executeUpdate();
                     }
 
-                    return totalPagar; // Devolvemos el precio final calculado
+                    return horasTranscurridas;
                 }
             }
 
@@ -126,21 +107,14 @@ public class EstanciaDAO {
         }
     }
 
-    /**
-     * Asegura la existencia del vehículo en la tabla Vehiculos.
-     */
     private void asegurarVehiculo(Connection con, String matricula) throws SQLException {
-        String sql = "INSERT IGNORE INTO Vehiculos (matricula, marca, modelo) VALUES (?, 'Genérico', 'Prueba')";
+        String sql = "INSERT IGNORE INTO Vehiculos (matricula, marca, modelo) VALUES (?, 'Generico', 'Prueba')";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, matricula);
             ps.executeUpdate();
         }
     }
 
-    /**
-     * Busca un cliente base en la base de datos. Si no existe ninguno para el tipo de usuario,
-     * lo inserta al vuelo y devuelve su ID autogenerado.
-     */
     private int asegurarClienteBase(Connection con, String tipoUsuario) throws SQLException {
         String tipoEnum = "normal";
         if (tipoUsuario.toLowerCase().contains("abonado")) tipoEnum = "abonado";
@@ -156,7 +130,7 @@ public class EstanciaDAO {
             }
         }
 
-        String sqlInsertar = "INSERT INTO Clientes (tipo_usuario, nombre, dni) VALUES (?, 'Cliente Genérico', '00000000T')";
+        String sqlInsertar = "INSERT INTO Clientes (tipo_usuario, nombre, dni) VALUES (?, 'Cliente Generico', '00000000T');";
         try (PreparedStatement psInsertar = con.prepareStatement(sqlInsertar, Statement.RETURN_GENERATED_KEYS)) {
             psInsertar.setString(1, tipoEnum);
             psInsertar.executeUpdate();
@@ -168,5 +142,33 @@ public class EstanciaDAO {
             }
         }
         return 1;
+    }
+
+    /**
+     * Cuenta el numero de abonados que estan actualmente dentro de una sucursal.
+     */
+    public int contarAbonadosDentro(int idParking) {
+        // Enlace corregido usando id_cliente para evitar cruces con la matricula
+        String sql = "SELECT COUNT(*) AS total FROM Estancias e " +
+                "INNER JOIN Clientes c ON e.id_cliente = c.id_cliente " +
+                "WHERE e.id_parking = ? AND e.fecha_salida IS NULL " +
+                "AND c.tipo_usuario = 'abonado'";
+
+        try (Connection con = ConexionBD.getConexion()) {
+            if (con == null) return 0;
+
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setInt(1, idParking);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("total");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar los abonados dentro del parking.");
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

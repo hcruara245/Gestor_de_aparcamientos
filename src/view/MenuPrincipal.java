@@ -4,84 +4,85 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
-/**
- * Vista del Menú Principal.
- * Permite seleccionar el aparcamiento con el que se va a trabajar.
- */
 public class MenuPrincipal extends JFrame {
 
-    // Botones para cada uno de los 3 parkings oficiales
     private JButton btnParkingNorte;
     private JButton btnParkingCentro;
     private JButton btnParkingSur;
 
     public MenuPrincipal() {
-        // Configuración básica de la ventana
         setTitle("Sistema Gestor de Aparcamientos - Los Panteras");
-        setSize(500, 350);
+        setSize(520, 380); // Un pelín más de aire para el diseño moderno
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Centra la ventana en la pantalla
+        setLocationRelativeTo(null);
         setResizable(false);
 
-        // Contenedor principal con un diseño limpio y márgenes
-        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 20));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        panelPrincipal.setBackground(new Color(245, 247, 250)); // Fondo gris azulado suave
+        // Contenedor base
+        JPanel panelPrincipal = new JPanel(new BorderLayout(0, 25));
+        panelPrincipal.setBackground(new Color(240, 244, 248)); // El mismo gris azulado de las otras pantallas
 
-        // 1. TÍTULO SUPERIOR (Bienvenida)
-        JLabel lblTitulo = new JLabel("¿Con qué aparcamiento deseas trabajar hoy?", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
-        lblTitulo.setForeground(new Color(33, 43, 54));
-        panelPrincipal.add(lblTitulo, BorderLayout.NORTH);
+        // Cabecera superior con la identidad del grupo
+        JPanel panelHeader = new JPanel(new GridLayout(2, 1, 0, 4));
+        panelHeader.setBackground(new Color(30, 41, 59)); // Azul marino oscuro corporativo
+        panelHeader.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 2. CUERPO CENTRAL (Botones de los Parkings)
+        JLabel lblTitulo = new JLabel("ACCESO AL SISTEMA OPERATIVO", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTitulo.setForeground(Color.WHITE);
+
+        JLabel lblSubtitulo = new JLabel("Selecciona la sucursal para iniciar la jornada", SwingConstants.CENTER);
+        lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblSubtitulo.setForeground(new Color(148, 163, 184));
+
+        panelHeader.add(lblTitulo);
+        panelHeader.add(lblSubtitulo);
+        panelPrincipal.add(panelHeader, BorderLayout.NORTH);
+
+        // Cuerpo central con los botones de selección
         JPanel panelBotones = new JPanel(new GridLayout(3, 1, 0, 15));
         panelBotones.setOpaque(false);
-
-        // Estilo común para los botones (fácil de leer y moderno)
-        Font fontBotones = new Font("Arial", Font.PLAIN, 14);
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 35, 25, 35)); // Margen lateral para que los botones no peguen al borde
 
         btnParkingNorte = new JButton("Aparcamiento Norte (Sucursal A)");
         btnParkingCentro = new JButton("Aparcamiento Centro (Sucursal B)");
         btnParkingSur = new JButton("Aparcamiento Sur (Sucursal C)");
 
-        // Aplicamos estilos básicos
-        configurarBoton(btnParkingNorte, fontBotones);
-        configurarBoton(btnParkingCentro, fontBotones);
-        configurarBoton(btnParkingSur, fontBotones);
+        configurarBoton(btnParkingNorte);
+        configurarBoton(btnParkingCentro);
+        configurarBoton(btnParkingSur);
 
         panelBotones.add(btnParkingNorte);
         panelBotones.add(btnParkingCentro);
         panelBotones.add(btnParkingSur);
 
         panelPrincipal.add(panelBotones, BorderLayout.CENTER);
-
-        // Añadimos el panel estructurado al marco de la ventana
         add(panelPrincipal);
     }
 
     /**
-     * Aplica un diseño homogéneo e intuitivo a los botones.
+     * Aplica los estilos modernos del dashboard a los botones de entrada.
      */
-    private void configurarBoton(JButton boton, Font fuente) {
-        boton.setFont(fuente);
+    private void configurarBoton(JButton boton) {
+        boton.setFont(new Font("Segoe UI", Font.BOLD, 13));
         boton.setFocusPainted(false);
         boton.setBackground(Color.WHITE);
         boton.setForeground(new Color(51, 65, 85));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Efecto click manual
+
+        // Borde estilizado con padding interno para el texto
         boton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(203, 213, 225), 1),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+                BorderFactory.createEmptyBorder(12, 15, 12, 15)
         ));
     }
 
-    // Métodos para que el Controlador pueda escuchar los clics de forma limpia
     public void conectarListeners(ActionListener listener) {
         btnParkingNorte.addActionListener(listener);
         btnParkingCentro.addActionListener(listener);
         btnParkingSur.addActionListener(listener);
     }
 
-    // Getters para identificar qué botón se ha pulsado
+    // Getters para el MenuController
     public JButton getBtnParkingNorte() { return btnParkingNorte; }
     public JButton getBtnParkingCentro() { return btnParkingCentro; }
     public JButton getBtnParkingSur() { return btnParkingSur; }
