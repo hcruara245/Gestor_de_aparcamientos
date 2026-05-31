@@ -9,7 +9,7 @@ import java.sql.SQLException;
  */
 public class ConexionBD {
 
-    private static final String URL = "jdbc:mysql://172.22.242.195:3306/parking_db";
+    private static final String URL = "jdbc:mysql://172.22.236.194:3306/parking_db";
     private static final String USER = "root";
     private static final String PASSWORD = "root";
 
